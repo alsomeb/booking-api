@@ -35,3 +35,10 @@ type MongoClient struct {
 	The * in this context is used to dereference the pointer inside the MongoClient struct, giving you the actual mongo.Client object.
 
 */
+
+// User represents a user in the system
+type User struct {
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	LastLogin string `json:"lastLogin"`
+}

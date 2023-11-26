@@ -1,10 +1,12 @@
 package main
 
 import (
+	"booking-api/auth"
 	"booking-api/database/driver"
 	"booking-api/database/repo"
 	"booking-api/structs"
 	"context"
+	firebase "firebase.google.com/go/v4"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
@@ -71,6 +73,33 @@ func getBookingById(c *gin.Context, client *structs.MongoClient) {
 	c.JSON(http.StatusOK, result)
 }
 
+func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
+	// Get the Firebase Auth client
+	client, err := firebaseClient.Auth(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Firebase Auth client"})
+		return
+	}
+
+	// Get the token from the request header
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is missing"})
+		return
+	}
+
+	// verify token the token
+	decodedToken, err := client.VerifyIDToken(c, token)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	claims := decodedToken.Claims
+
+	c.JSON(http.StatusOK, claims)
+}
+
 func main() {
 	appRouter := gin.Default()
 
@@ -80,6 +109,9 @@ func main() {
 	// init mongo client
 	mongoClient := driver.ConnectToMongo()
 
+	// init firebase app
+	firebaseClient := auth.InitFireBaseApp()
+
 	api.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{ // H is a shorthand for MAP - new map instance with the given values
 			"message": "Hello World",
@@ -88,6 +120,10 @@ func main() {
 
 	api.GET("/bookings", func(c *gin.Context) {
 		getAllBookings(c, mongoClient)
+	})
+
+	api.GET("/verify-token", func(c *gin.Context) {
+		verifyToken(c, firebaseClient)
 	})
 
 	api.GET("/bookings/:id", func(c *gin.Context) {
