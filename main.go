@@ -139,7 +139,7 @@ func getBookingById(c *gin.Context) {
 	var bookingResult Booking
 	errFetch := mongoClient.Database("Bookings").Collection("Bookings").FindOne(context.TODO(), bson.D{{"_id", id}}).Decode(&bookingResult)
 	if errFetch != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errFetch.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": errFetch.Error()})
 		return
 	}
 
