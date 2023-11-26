@@ -74,30 +74,21 @@ func getBookingById(c *gin.Context, client *structs.MongoClient) {
 }
 
 func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
-	// Get the Firebase Auth client
-	client, err := firebaseClient.Auth(c)
+	userRecord, err := auth.GetUserData(firebaseClient, c)
+
+	// If Token Errors
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Firebase Auth client"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get the token from the request header
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is missing"})
+	// If No user record
+	if userRecord == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	// verify token the token
-	decodedToken, err := client.VerifyIDToken(c, token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-
-	claims := decodedToken.Claims
-
-	c.JSON(http.StatusOK, claims)
+	c.JSON(http.StatusOK, gin.H{"userData": userRecord})
 }
 
 func main() {
@@ -122,7 +113,7 @@ func main() {
 		getAllBookings(c, mongoClient)
 	})
 
-	api.GET("/verify-token", func(c *gin.Context) {
+	api.GET("/verify", func(c *gin.Context) {
 		verifyToken(c, firebaseClient)
 	})
 
