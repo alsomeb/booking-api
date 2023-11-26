@@ -89,7 +89,7 @@ func addBooking(c *gin.Context) {
 		return
 	}
 
-	newBooking.Added = time.Now().UTC().Format(time.DateTime)
+	newBooking.Added = time.Now().UTC().Format(time.RFC3339) // "2006-01-02T15:04:05Z07:00"
 
 	result, err := mongoClient.Database("Bookings").Collection("Bookings").InsertOne(context.TODO(), newBooking)
 
