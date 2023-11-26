@@ -163,5 +163,5 @@ func main() {
 	api.POST("/bookings/add", addBooking)
 
 	log.Println("Mongo DB Connected")
-	_ = r.Run("192.168.1.64:8080")
+	_ = r.Run()
 }
