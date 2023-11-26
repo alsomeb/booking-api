@@ -55,13 +55,13 @@ func GetUserData(client *firebase.App, ctx *gin.Context) (*auth.UserRecord, erro
 	// Extract user information
 	email, ok := decodedToken.Claims["email"].(string)
 	if !ok {
-		return nil, errors.New("failed to extract user email")
+		return nil, errors.New("failed to extract user email from token claims")
 	}
 
 	// Get user record by email
 	userRecord, err := authClient.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to retrieve User record")
 	}
 
 	return userRecord, nil

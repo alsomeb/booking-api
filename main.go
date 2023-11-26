@@ -76,7 +76,7 @@ func getBookingById(c *gin.Context, client *structs.MongoClient) {
 func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
 	userRecord, err := auth.GetUserData(firebaseClient, c)
 
-	// If Token Errors
+	// If Token Errors or Firebase Errors
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -84,7 +84,7 @@ func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
 
 	// If No user record
 	if userRecord == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User record not found"})
 		return
 	}
 
