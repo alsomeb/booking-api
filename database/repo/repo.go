@@ -10,7 +10,7 @@ import (
 )
 
 // AddBooking - add new Booking
-func AddBooking(newBooking *structs.Booking, mongoClient *mongo.Client) (*mongo.InsertOneResult, error) {
+func AddBooking(newBooking *structs.Booking, client *structs.MongoClient) (*mongo.InsertOneResult, error) {
 	// Bind the request JSON to a Booking Struct
 
 	/*
@@ -28,26 +28,26 @@ func AddBooking(newBooking *structs.Booking, mongoClient *mongo.Client) (*mongo.
 	newBooking.CreatedAt = time.Now().UTC()
 	newBooking.UpdatedAt = time.Now().UTC()
 
-	result, err := mongoClient.Database("Bookings").Collection("Bookings").InsertOne(context.TODO(), newBooking)
+	result, err := client.MongoClient.Database("Bookings").Collection("Bookings").InsertOne(context.TODO(), newBooking)
 
 	return result, err
 }
 
-// GetAllBookings - Collects all bookings
-func GetAllBookings(mongoClient *mongo.Client) (*mongo.Cursor, error) {
+// CollectAllBookings - Collects all bookings
+func CollectAllBookings(client *structs.MongoClient) (*mongo.Cursor, error) {
 	// Find movies
 	// bson.D is a type representing a BSON document in Go.
 	// {{}} is a composite literal creating an instance of bson.D with an empty BSON document.
 	// bson.D{{}} is an empty filter that retrieves all documents when used in a MongoDB query.
-	cursor, err := mongoClient.Database("Bookings").Collection("Bookings").Find(context.TODO(), bson.D{{}})
+	cursor, err := client.MongoClient.Database("Bookings").Collection("Bookings").Find(context.TODO(), bson.D{{}})
 
 	return cursor, err
 }
 
 // GetBookingById - Fetch booking by id (ObjectId)
-func GetBookingById(id primitive.ObjectID, mongoClient *mongo.Client) (structs.Booking, error) {
+func GetBookingById(id primitive.ObjectID, client *structs.MongoClient) (structs.Booking, error) {
 	var bookingResult structs.Booking
-	err := mongoClient.Database("Bookings").Collection("Bookings").FindOne(context.TODO(), bson.D{{"_id", id}}).Decode(&bookingResult)
+	err := client.MongoClient.Database("Bookings").Collection("Bookings").FindOne(context.TODO(), bson.D{{"_id", id}}).Decode(&bookingResult)
 
 	return bookingResult, err
 }

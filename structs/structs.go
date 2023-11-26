@@ -2,6 +2,7 @@ package structs
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -17,4 +18,8 @@ type Booking struct {
 	Name      string             `bson:"name" json:"name"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+}
+
+type MongoClient struct {
+	MongoClient *mongo.Client
 }

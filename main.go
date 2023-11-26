@@ -7,21 +7,12 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 )
 
-// A global variable that will hold a reference to the MongoDB client
-var mongoClient *mongo.Client
-
-// The init function will run before our main function to establish a connection to MongoDB. If it cannot connect it will fail and the program will exit.
-func init() {
-	mongoClient = driver.ConnectToMongo()
-}
-
 // add Booking
-func addBooking(c *gin.Context) {
+func addBooking(c *gin.Context, client *structs.MongoClient) {
 	var newBooking structs.Booking
 
 	err := c.BindJSON(&newBooking)
@@ -30,7 +21,7 @@ func addBooking(c *gin.Context) {
 		return
 	}
 
-	result, err := repo.AddBooking(&newBooking, mongoClient)
+	result, err := repo.AddBooking(&newBooking, client)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -42,8 +33,8 @@ func addBooking(c *gin.Context) {
 }
 
 // Collects all bookings
-func getAllBookings(c *gin.Context) {
-	cursor, err := repo.GetAllBookings(mongoClient)
+func getAllBookings(c *gin.Context, client *structs.MongoClient) {
+	cursor, err := repo.CollectAllBookings(client)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,7 +51,7 @@ func getAllBookings(c *gin.Context) {
 	c.JSON(http.StatusOK, results)
 }
 
-func getBookingById(c *gin.Context) {
+func getBookingById(c *gin.Context, client *structs.MongoClient) {
 	// Get movie ID from URL-Params
 	idStr := c.Param("id")
 
@@ -70,7 +61,7 @@ func getBookingById(c *gin.Context) {
 		return
 	}
 
-	result, err := repo.GetBookingById(id, mongoClient)
+	result, err := repo.GetBookingById(id, client)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -86,15 +77,26 @@ func main() {
 	// Set base URL for the API
 	api := appRouter.Group("/api")
 
+	// init mongo client
+	mongoClient := driver.ConnectToMongo()
+
 	api.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{ // H is a shorthand for MAP - new map instance with the given values
 			"message": "Hello World",
 		})
 	})
 
-	api.GET("/bookings", getAllBookings)
-	api.GET("/bookings/:id", getBookingById)
-	api.POST("/bookings/add", addBooking)
+	api.GET("/bookings", func(c *gin.Context) {
+		getAllBookings(c, mongoClient)
+	})
+
+	api.GET("/bookings/:id", func(c *gin.Context) {
+		getBookingById(c, mongoClient)
+	})
+
+	api.POST("/bookings/add", func(c *gin.Context) {
+		addBooking(c, mongoClient)
+	})
 
 	log.Println("Mongo DB Connected")
 	err := appRouter.Run()
