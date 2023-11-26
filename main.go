@@ -72,14 +72,15 @@ func addBooking(c *gin.Context) {
 	// Bind the request JSON to a Booking Struct
 
 	/*
-		 When you pass a variable to a function,it is passed by value, meaning the function receives a copy of the variable.
-		If you want the function to modify the original variable (rather than just a copy), you need to pass a pointer to that variable.
-		This is because pointers allow functions to indirectly modify the value they point to.
+	   When you pass a variable to a function, it is passed by value, meaning the function receives a copy of the variable.
+	   If you want the function to modify the original variable (rather than just a copy), you need to pass a pointer to that variable.
+	   This is because pointers allow functions to indirectly modify the value they point to.
 
-		Without passing a pointer (&newBooking), BindJSON would receive a copy of newBooking, and any modifications it makes would not affect the original variable.
+	   In this case, c.BindJSON(&newBooking) modifies the original 'newBooking' struct with the properties received from the payload.
+	   Without passing a pointer (&newBooking), BindJSON would receive a copy of 'newBooking', and any modifications it makes
+	   would not affect the original variable.
 
-		We modify the .Added so it wouldn't receive any update without a pointer
-
+	   Since we receive properties from the payload, 'newBooking' needs to be modified in place.
 	*/
 	var newBooking Booking
 	err := c.BindJSON(&newBooking)
@@ -162,5 +163,5 @@ func main() {
 	api.POST("/bookings/add", addBooking)
 
 	log.Println("Mongo DB Connected")
-	_ = r.Run()
+	_ = r.Run("192.168.1.64:8080")
 }
