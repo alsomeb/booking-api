@@ -11,18 +11,16 @@ import (
 
 // AddBooking - add new Booking
 func AddBooking(newBooking *structs.Booking, client *structs.MongoClient) (*mongo.InsertOneResult, error) {
-	// Bind the request JSON to a Booking Struct
-
 	/*
-	   When you pass a variable to a function, it is passed by value, meaning the function receives a copy of the variable.
-	   If you want the function to modify the original variable (rather than just a copy), you need to pass a pointer to that variable.
-	   This is because pointers allow functions to indirectly modify the value they point to.
+		   When you pass a variable to a function, it is passed by value, meaning the function receives a copy of the variable.
+		   If you want the function to modify the original variable (rather than just a copy), you need to pass a pointer to that variable.
+		   This is because pointers allow functions to indirectly modify the value they point to.
 
-	   In this case, c.BindJSON(&newBooking) modifies the original 'newBooking' struct with the properties received from the payload.
-	   Without passing a pointer (&newBooking), BindJSON would receive a copy of 'newBooking', and any modifications it makes
-	   would not affect the original variable.
+			The newBooking parameter is a pointer to the original structs.Booking instance. If you modify the fields of newBooking inside the function,
+			you will be modifying the fields of the original structs.Booking variable outside the function.
 
-	   Since we receive properties from the payload, 'newBooking' needs to be modified in place.
+			Similarly, the client parameter is a pointer to the original structs.MongoClient instance.
+			If you modify the fields of client inside the function, you will be modifying the fields of the original structs.MongoClient variable outside the function.
 	*/
 
 	newBooking.CreatedAt = time.Now().UTC()

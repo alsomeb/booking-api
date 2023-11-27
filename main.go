@@ -16,6 +16,11 @@ import (
 
 // add Booking
 func addBooking(c *gin.Context, client *structs.MongoClient) {
+	/*
+				The purpose of BindJSON is to populate the fields of the provided struct with the data from the JSON request.
+			    To achieve this, it needs to modify the fields of the struct, and it can only do that if it operates on the actual struct and not a copy.
+		        That's why we pass its mem address with &
+	*/
 	var newBooking structs.Booking
 
 	err := c.BindJSON(&newBooking)
@@ -24,6 +29,8 @@ func addBooking(c *gin.Context, client *structs.MongoClient) {
 		return
 	}
 
+	// Pass newBooking mem adress with (&) because function expects a pointer
+	// client is already a pointer
 	result, err := repo.AddBooking(&newBooking, client)
 
 	if err != nil {
