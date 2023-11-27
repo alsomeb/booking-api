@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/option"
 	"log"
-	"strings"
 )
 
 func InitFireBaseApp() *firebase.App {
@@ -24,39 +23,28 @@ func InitFireBaseApp() *firebase.App {
 	return app
 }
 
-// GetUserData retrieves user data based on the provided Firebase client and Gin context.
-func GetUserData(client *firebase.App, ctx *gin.Context) (*auth.UserRecord, error) {
-	// The gin Context in func params == carries information about the current HTTP request
-
+func GetAuthClient(client *firebase.App) (*auth.Client, error) {
 	// Get the Auth client
 	authClient, err := client.Auth(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the token from the request header
-	token := ctx.GetHeader("Authorization")
+	return authClient, nil
+}
 
-	if token == "" {
-		return nil, errors.New("authorization token is missing")
-	}
-
-	tokenParams := strings.Fields(token)
-	if len(tokenParams) != 2 {
-		return nil, errors.New("invalid token or format")
-	}
-
-	// Verify the token
-	decodedToken, err := authClient.VerifyIDToken(context.Background(), tokenParams[1])
-	if err != nil {
-		return nil, errors.New("invalid token or format")
-	}
+// GetUserData retrieves user data based on the provided Firebase client and Gin context.
+func GetUserData(client *firebase.App, ctx *gin.Context) (*auth.UserRecord, error) {
+	authClient, err := GetAuthClient(client)
 
 	// Extract user information
-	email, ok := decodedToken.Claims["email"].(string)
+	claims, ok := ctx.Get("userClaims")
 	if !ok {
-		return nil, errors.New("failed to extract user email from token claims")
+		return nil, errors.New("failed to fetch user value from context")
 	}
+
+	claimsMap := claims.(map[string]interface{}) // dynamic we don't know which type key value thus interface{}
+	email := claimsMap["email"].(string)         // type assert email as string
 
 	// Get user record by email
 	userRecord, err := authClient.GetUserByEmail(context.Background(), email)

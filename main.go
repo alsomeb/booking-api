@@ -4,6 +4,7 @@ import (
 	"booking-api/auth"
 	"booking-api/database/driver"
 	"booking-api/database/repo"
+	"booking-api/middleware"
 	"booking-api/structs"
 	"context"
 	firebase "firebase.google.com/go/v4"
@@ -73,10 +74,10 @@ func getBookingById(c *gin.Context, client *structs.MongoClient) {
 	c.JSON(http.StatusOK, result)
 }
 
-func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
+func getUserData(c *gin.Context, firebaseClient *firebase.App) {
 	userRecord, err := auth.GetUserData(firebaseClient, c)
 
-	// If Token Errors or Firebase Errors
+	// If failed to retrieve context value (claims)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -94,14 +95,17 @@ func verifyToken(c *gin.Context, firebaseClient *firebase.App) {
 func main() {
 	appRouter := gin.Default()
 
-	// Set base URL for the API
-	api := appRouter.Group("/api")
-
 	// init mongo client
 	mongoClient := driver.ConnectToMongo()
 
 	// init firebase app
 	firebaseClient := auth.InitFireBaseApp()
+
+	// Use the token verification middleware for every route (request)
+	appRouter.Use(middleware.TokenVerificationMiddleware(firebaseClient))
+
+	// Set base URL for the API
+	api := appRouter.Group("/api")
 
 	api.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{ // H is a shorthand for MAP - new map instance with the given values
@@ -113,8 +117,8 @@ func main() {
 		getAllBookings(c, mongoClient)
 	})
 
-	api.GET("/verify", func(c *gin.Context) {
-		verifyToken(c, firebaseClient)
+	api.GET("/user", func(c *gin.Context) {
+		getUserData(c, firebaseClient)
 	})
 
 	api.GET("/bookings/:id", func(c *gin.Context) {
