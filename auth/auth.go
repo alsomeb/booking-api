@@ -43,8 +43,15 @@ func GetUserData(client *firebase.App, ctx *gin.Context) (*auth.UserRecord, erro
 		return nil, errors.New("failed to fetch user value from context")
 	}
 
-	claimsMap := claims.(map[string]interface{}) // dynamic we don't know which type key value thus interface{}
+	claimsMap := claims.(map[string]interface{}) // dynamic we don't know which type value could be thus interface{}
 	email := claimsMap["email"].(string)         // type assert email as string
+
+	/*
+
+	- The key is of type string. This is specific and not generic, as all keys must be strings.
+	- The value is of type interface{}. This is generic because interface{} in Go is the empty interface, meaning it can hold values of any type.
+          Therefore, in the map map[string]interface{}, the key is not generic (it's specifically a string), and the value is generic (it can be any type).
+ */
 
 	// Get user record by email
 	userRecord, err := authClient.GetUserByEmail(context.Background(), email)
